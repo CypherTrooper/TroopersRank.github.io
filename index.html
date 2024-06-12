@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CypherTroopers Ranking</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        .address {
+            font-weight: bold;
+        }
+        .balance {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CypherTroopers Ranking</h1>
+    <h2>Real-time data</h2>
+    <p>Latest Block: <span id="latestBlock">Loading...</span></p>
+    <p>Active wallets: <span id="walletCount">Loading...</span></p>
+    <h2>Top 200 Troopers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>address&power(CPH)</th>
+            </tr>
+        </thead>
+        <tbody id="walletRanking">
+            <tr>
+                <td colspan="2">Laoding...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchStats() {
+            try {
+                const res = await fetch('/stats');
+                const data = await res.json();
+                document.getElementById('latestBlock').innerText = data.latestBlock || 'error';
+                document.getElementById('walletCount').innerText = data.walletCount || 'error';
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                document.getElementById('latestBlock').innerText = 'error';
+                document.getElementById('walletCount').innerText = 'error';
+            }
+        }
+
+        async function fetchRanking() {
+            try {
+                const res = await fetch('/ranking');
+                const wallets = await res.json();
+                const tbody = document.getElementById('walletRanking');
+                tbody.innerHTML = '';
+                wallets.forEach((wallet, index) => {
+                    const tr = document.createElement('tr');
+                    const rankTd = document.createElement('td');
+                    rankTd.innerText = `${index + 1}`;
+                    const detailsTd = document.createElement('td');
+                    const addressDiv = document.createElement('div');
+                    addressDiv.className = 'address';
+                    addressDiv.innerText = wallet.address;
+                    const balanceDiv = document.createElement('div');
+                    balanceDiv.className = 'balance';
+                    balanceDiv.innerText = `${wallet.balance} CPH`;
+                    detailsTd.appendChild(addressDiv);
+                    detailsTd.appendChild(balanceDiv);
+                    tr.appendChild(rankTd);
+                    tr.appendChild(detailsTd);
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error fetching ranking:', error);
+                const tbody = document.getElementById('walletRanking');
+                tbody.innerHTML = '<tr><td colspan="2">error</td></tr>';
+            }
+        }
+
+        fetchStats();
+        fetchRanking();
+        setInterval(fetchStats, 60000); // 1分ごとに更新
+        setInterval(fetchRanking, 300000); // 5分ごとに更新
+    </script>
+</body>
+</html>
